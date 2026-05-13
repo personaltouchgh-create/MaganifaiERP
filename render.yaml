@@ -98,10 +98,10 @@ services:
 databases:
   - name: db-staging
     region: oregon
-    plan: starter
+    plan: basic-1gb
   - name: db-prod
     region: oregon
-    plan: starter
+    plan: basic-1gb
 
 envVarGroups:
   - name: staging-secrets
