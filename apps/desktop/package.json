@@ -1,0 +1,16 @@
+{
+  "name": "@repo/desktop",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "echo \"Run Tauri dev via tauri cli\"",
+    "build": "echo \"Run Tauri build via tauri cli\"",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vitest": "^2.0.0"
+  }
+}

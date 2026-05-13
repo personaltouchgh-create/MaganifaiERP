@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/security" },
+    { "path": "./apps/api" },
+    { "path": "./apps/erp-web" },
+    { "path": "./apps/portal-pwa" }
+  ]
+}

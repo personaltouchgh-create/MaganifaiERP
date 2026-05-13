@@ -1,0 +1,44 @@
+{
+  "name": "pharmacy-erp",
+  "private": true,
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "format": "prettier -w .",
+    "prepare": "husky",
+    "dev:up": "docker compose up -d",
+    "dev:up:mail": "docker compose --profile mail up -d",
+    "dev:down": "docker compose down --remove-orphans",
+    "dev:seed": "node scripts/dev-seed.mjs",
+    "dev:reset": "node -e \"if (process.env.DEV_RESET_CONFIRM !== 'YES') { console.error('Refusing to reset. Set DEV_RESET_CONFIRM=YES'); process.exit(1); }\" && docker compose down --remove-orphans && docker volume rm pharmacy-erp-local_postgres_data || true && docker compose up -d"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs}": [
+      "eslint --fix",
+      "prettier -w"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier -w"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "19.5.0",
+    "@commitlint/config-conventional": "19.5.0",
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "husky": "^9.1.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.3.0",
+    "turbo": "^2.1.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^2.0.0"
+  }
+}

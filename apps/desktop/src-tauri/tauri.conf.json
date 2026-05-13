@@ -1,0 +1,12 @@
+{
+  "build": {
+    "beforeDevCommand": "pnpm --filter @repo/erp-web dev",
+    "beforeBuildCommand": "pnpm --filter @repo/erp-web build",
+    "devPath": "http://localhost:5173",
+    "distDir": "../erp-web/dist"
+  },
+  "package": {
+    "productName": "Pharmacy ERP Desktop",
+    "version": "0.1.0"
+  }
+}

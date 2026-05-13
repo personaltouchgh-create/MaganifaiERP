@@ -1,0 +1,21 @@
+FROM node:20-slim AS base
+WORKDIR /app
+
+FROM base AS deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/worker/package.json apps/worker/package.json
+RUN corepack enable && corepack prepare pnpm@9.12.3 --activate
+RUN pnpm fetch
+
+FROM base AS build
+COPY --from=deps /root/.local/share/pnpm/store /root/.local/share/pnpm/store
+COPY . .
+RUN corepack enable && corepack prepare pnpm@9.12.3 --activate
+RUN pnpm -r install --offline
+RUN pnpm --filter @repo/worker build
+
+FROM base AS run
+ENV NODE_ENV=production
+COPY --from=build /app/apps/worker/dist /app/dist
+COPY --from=build /app/apps/worker/package.json /app/package.json
+CMD ["node", "dist/main.js"]

@@ -1,0 +1,20 @@
+{
+  "name": "@repo/mobile",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "echo \"Run Expo dev via expo cli\"",
+    "build": "echo \"Use EAS build\"",
+    "lint": "eslint src --max-warnings=0",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@repo/security": "workspace:*",
+    "@repo/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vitest": "^2.0.0"
+  }
+}
