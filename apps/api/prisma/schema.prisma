@@ -1,15 +1,192 @@
 generator client {
-  provider = "prisma-client-js"
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  engineType          = "binary"
+  moduleFormat        = "cjs"
+  importFileExtension = ""
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model Tenant {
-  id        String   @id @default(uuid())
-  name      String
-  createdAt DateTime @default(now())
+  id              String   @id @default(cuid())
+  name            String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  branches        Branch[]
+  paymentSettings TenantPaymentSettings?
 }
 
+model Branch {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+}
+
+model TenantPaymentSettings {
+  tenantId                       String   @id
+  keyVersion                     Int
+  paystackEnabled                Boolean  @default(false)
+  paystackPublicKey              String?
+  paystackSecretKeyEncrypted     Bytes?
+  paystackWebhookSecretEncrypted Bytes?
+  channelsMomo                   Boolean  @default(false)
+  channelsCard                   Boolean  @default(false)
+  minPartialAmountGhs            Decimal  @db.Decimal(10, 2)
+  webhookLastSeenAt              DateTime?
+  webhookLastStatus              String?
+  updatedAt                      DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  tenantId      String
+  branchId      String
+  invoiceNumber String
+  currency      String   @default("GHS")
+  totalAmount   Decimal  @db.Decimal(10, 2)
+  status        String   @default("OPEN")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  allocations PaymentAllocation[]
+  intents     PaymentIntent[]
+
+  @@unique([tenantId, invoiceNumber])
+  @@index([tenantId, branchId])
+}
+
+model PaymentIntent {
+  id              String   @id @default(cuid())
+  tenantId        String
+  branchId        String
+  invoiceId       String
+  amount          Decimal  @db.Decimal(10, 2)
+  channel         String
+  status          String   @default("PENDING")
+  idempotencyKey  String
+  createdFrom     String
+  createdByUserId String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  invoice      Invoice              @relation(fields: [invoiceId], references: [id])
+  transactions PaymentTransaction[]
+
+  @@unique([tenantId, idempotencyKey])
+  @@index([tenantId, invoiceId, status])
+}
+
+model PaymentTransaction {
+  id              String   @id @default(cuid())
+  tenantId        String
+  branchId        String
+  paymentIntentId String
+  provider        String
+  providerRef     String
+  providerStatus  String
+  paidAt          DateTime?
+  rawPayloadJson  Json
+  createdAt       DateTime @default(now())
+
+  intent      PaymentIntent       @relation(fields: [paymentIntentId], references: [id])
+  allocations PaymentAllocation[]
+  refunds     Refund[]
+
+  @@unique([tenantId, providerRef])
+  @@index([tenantId, paymentIntentId])
+}
+
+model PaymentAllocation {
+  id                   String   @id @default(cuid())
+  tenantId             String
+  branchId             String
+  invoiceId            String
+  paymentTransactionId String
+  amount               Decimal  @db.Decimal(10, 2)
+  createdAt            DateTime @default(now())
+
+  invoice      Invoice            @relation(fields: [invoiceId], references: [id])
+  transaction  PaymentTransaction @relation(fields: [paymentTransactionId], references: [id])
+
+  @@index([tenantId, invoiceId])
+}
+
+model Refund {
+  id                   String   @id @default(cuid())
+  tenantId             String
+  branchId             String
+  paymentTransactionId String
+  amount               Decimal  @db.Decimal(10, 2)
+  reason               String
+  status               String   @default("PENDING")
+  providerRef          String?
+  requestedByUserId    String
+  approvedByUserId     String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  transaction PaymentTransaction @relation(fields: [paymentTransactionId], references: [id])
+
+  @@index([tenantId, paymentTransactionId])
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  tenantId       String
+  branchId       String?
+  actorUserId    String
+  action         String
+  entityType     String
+  entityId       String
+  idempotencyKey String
+  requestId      String
+  occurredAt     DateTime
+  metadata       Json
+
+  @@index([tenantId, branchId])
+  @@unique([tenantId, idempotencyKey])
+}
+
+model ReconciliationRun {
+  id                   String   @id @default(cuid())
+  tenantId             String
+  date                 DateTime
+  providerSuccessCount Int
+  allocatedCount       Int
+  mismatchCount        Int
+  generatedAt          DateTime @default(now())
+
+  mismatches ReconciliationMismatch[]
+
+  @@unique([tenantId, date])
+}
+
+model ReconciliationMismatch {
+  id            String   @id @default(cuid())
+  tenantId       String
+  branchId       String?
+  runId          String
+  providerRef    String
+  amount         Decimal  @db.Decimal(10, 2)
+  providerStatus String
+  erpStatus      String
+  reason         String
+  state          String   @default("OPEN")
+  resolutionJson Json?
+  createdAt      DateTime @default(now())
+
+  run ReconciliationRun @relation(fields: [runId], references: [id])
+
+  @@index([tenantId, runId])
+}

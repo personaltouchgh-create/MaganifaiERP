@@ -4,7 +4,10 @@ dist
 build
 .turbo
 coverage
+.cache
 .env
 .env.*
 src-tauri/target
-
+apps/api/src/generated/prisma
+.docx_extract
+.tmp_pylibs
