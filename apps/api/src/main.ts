@@ -7,7 +7,7 @@ import { rateLimit } from "./common/rate-limit";
 import { securityHeaders } from "./common/security-headers";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.use(securityHeaders);
   app.use(
